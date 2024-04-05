@@ -23,7 +23,7 @@ void createSnapshot(const char *directoryPath) {
         perror("Unable to open directory");
         exit(EXIT_FAILURE);
     }
-    
+
     // Open the Snapshot.txt file
     snprintf(filePath, sizeof(filePath), "%s/Snapshot.txt", directoryPath);
     FILE *snapshotFile = fopen(filePath, "w");
@@ -37,19 +37,19 @@ void createSnapshot(const char *directoryPath) {
     while((entry = readdir(dir)) != NULL) {
         snprintf(filePath, sizeof(filePath), "%s/%s", directoryPath, entry->d_name);
 
-    // Get file stats
-    if(stat(filePath, &fileInfo) == 0) {
-        t = fileInfo.st_mtime;
-        tmp = localtime(&t);
-        strftime(lastModifiedTime, sizeof(lastModifiedTime), "%Y-%m-%d %H:%M:%S", tmp);
-        // Write metadata to Snapshot.txt
-        if(S_ISDIR(fileInfo.st_mode)) {
-            fprintf(snapshotFile, "Directory: %s, Last Modified: %s\n", entry->d_name, lastModifiedTime);
-        } else {
-            fprintf(snapshotFile, "File: %s, Size: %ld, Last Modified: %s\n", entry->d_name, fileInfo.st_size, lastModifiedTime);
+        // Get file stats
+        if(stat(filePath, &fileInfo) == 0) {
+            t = fileInfo.st_mtime;
+            tmp = localtime(&t);
+            strftime(lastModifiedTime, sizeof(lastModifiedTime), "%Y-%m-%d %H:%M:%S", tmp);
+            // Write metadata to Snapshot.txt
+            if(S_ISDIR(fileInfo.st_mode)) {
+                fprintf(snapshotFile, "Directory: %s, Last Modified: %s\n", entry->d_name, lastModifiedTime);
+            } else {
+                fprintf(snapshotFile, "File: %s, Size: %ld, Last Modified: %s\n", entry->d_name, fileInfo.st_size, lastModifiedTime);
+            }
         }
     }
-}
 
     //Cleanup
     fclose(snapshotFile);
@@ -58,9 +58,13 @@ void createSnapshot(const char *directoryPath) {
 
 int main(int argc, char *argv[]) {
 
-    if(argc != 2) {
+    if(argc > 10) {
         fprintf(stderr, "Usage: %s \n", argv[0]);
         return EXIT_FAILURE;
+    }
+
+    for(int i = 1; i < argc; i++) {
+        createSnapshot(argv[i]);
     }
 
     createSnapshot(argv[1]);
