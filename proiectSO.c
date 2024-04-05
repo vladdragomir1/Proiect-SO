@@ -3,8 +3,8 @@ Sa se faca un snapshot, se mai ruleaza inca o data sa se prinda ca s-a modificat
 
 #define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
-#include <dirent.h>
 #include <stdlib.h>
+#include <dirent.h>
 #include <sys/stat.h>
 #include <time.h>
 
@@ -23,9 +23,11 @@ void createSnapshot(const char *directoryPath) {
         perror("Unable to open directory");
         exit(EXIT_FAILURE);
     }
+    
     // Open the Snapshot.txt file
     snprintf(filePath, sizeof(filePath), "%s/Snapshot.txt", directoryPath);
     FILE *snapshotFile = fopen(filePath, "w");
+
     if(snapshotFile == NULL) {
         perror("Unable to create snapshot file");
         exit(EXIT_FAILURE);
@@ -41,9 +43,9 @@ void createSnapshot(const char *directoryPath) {
         tmp = localtime(&t);
         strftime(lastModifiedTime, sizeof(lastModifiedTime), "%Y-%m-%d %H:%M:%S", tmp);
         // Write metadata to Snapshot.txt
-    if(S_ISDIR(fileInfo.st_mode)) {
-        fprintf(snapshotFile, "Directory: %s, Last Modified: %s\n", entry->d_name, lastModifiedTime);
-    } else {
+        if(S_ISDIR(fileInfo.st_mode)) {
+            fprintf(snapshotFile, "Directory: %s, Last Modified: %s\n", entry->d_name, lastModifiedTime);
+        } else {
             fprintf(snapshotFile, "File: %s, Size: %ld, Last Modified: %s\n", entry->d_name, fileInfo.st_size, lastModifiedTime);
         }
     }
