@@ -7,6 +7,7 @@ Sa se faca un snapshot, se mai ruleaza inca o data sa se prinda ca s-a modificat
 #include <dirent.h>
 #include <sys/stat.h>
 #include <time.h>
+#include <fcntl.h>
 
 void createSnapshot(const char *directoryPath) {
     DIR *dir;
@@ -26,7 +27,7 @@ void createSnapshot(const char *directoryPath) {
 
     // Open the Snapshot.txt file
     snprintf(filePath, sizeof(filePath), "%s/Snapshot.txt", directoryPath);
-    FILE *snapshotFile = fopen(filePath, "w");
+    FILE *snapshotFile = open(filePath, O_WRONLY, S_IWUSR);
 
     if(snapshotFile == NULL) {
         perror("Unable to create snapshot file");
@@ -44,7 +45,7 @@ void createSnapshot(const char *directoryPath) {
             strftime(lastModifiedTime, sizeof(lastModifiedTime), "%Y-%m-%d %H:%M:%S", tmp);
             // Write metadata to Snapshot.txt
             if(S_ISDIR(fileInfo.st_mode)) {
-                fprintf(snapshotFile, "Directory: %s, Last Modified: %s\n", entry->d_name, lastModifiedTime);
+                write(snapshotFile, "Directory: %s, Last Modified: %s\n", entry->d_name, lastModifiedTime);
             } else {
                 fprintf(snapshotFile, "File: %s, Size: %ld, Last Modified: %s\n", entry->d_name, fileInfo.st_size, lastModifiedTime);
             }
@@ -54,6 +55,10 @@ void createSnapshot(const char *directoryPath) {
     //Cleanup
     fclose(snapshotFile);
     closedir(dir);
+}
+
+void compare_snapshot {
+
 }
 
 int main(int argc, char *argv[]) {
@@ -71,3 +76,4 @@ int main(int argc, char *argv[]) {
 
     return EXIT_SUCCESS;
 }
+
