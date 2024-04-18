@@ -1,11 +1,9 @@
-/*Se primeste un folder ./program folder
-Sa se faca un snapshot, se mai ruleaza inca o data sa se prinda ca s-a modificat*/
-
 #define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <stdlib.h>
 #include <dirent.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <time.h>
 #include <fcntl.h>
 
@@ -27,7 +25,7 @@ void createSnapshot(const char *directoryPath) {
 
     // Open the Snapshot.txt file
     snprintf(filePath, sizeof(filePath), "%s/Snapshot.txt", directoryPath);
-    FILE *snapshotFile = open(filePath, O_WRONLY, S_IWUSR);
+    FILE *snapshotFile = fopen(filePath, "w"); // Change open to fopen and use "w" to write to the file.
 
     if(snapshotFile == NULL) {
         perror("Unable to create snapshot file");
@@ -57,23 +55,41 @@ void createSnapshot(const char *directoryPath) {
     closedir(dir);
 }
 
+/*
 void compare_snapshot {
 
 }
+*/
 
 int main(int argc, char *argv[]) {
 
     if(argc > 10) {
-        fprintf(stderr, "Usage: %s \n", argv[0]);
+        fprintf(stderr, "Usage: %s [directory_path]...\n", argv[0]);
         return EXIT_FAILURE;
     }
 
+    pid_t pid;
     for(int i = 1; i < argc; i++) {
-        createSnapshot(argv[i]);
+        pid = fork();
+        
+        if(pid == -1) {
+            perror("fork failed");
+            exit(EXIT_FAILURE);
+        } else if(pid == 0) {
+            // This is the child process
+            createSnapshot(argv[i]);
+            _exit(EXIT_SUCCESS); // Use _exit in child to prevent flushing of stdio buffers from parent
+        }
+        // Parent will continue to the next iteration without waiting here
     }
-
-    createSnapshot(argv[1]);
+    
+    // Parent waits for all child processes to finish
+    int status;
+    while ((pid = wait(&status)) > 0) {
+        if(WIFEXITED(status)) {
+            printf("Child with PID %ld exited with status %d.\n", (long)pid, WEXITSTATUS(status));
+        }
+    }
 
     return EXIT_SUCCESS;
 }
-
