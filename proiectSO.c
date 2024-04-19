@@ -15,14 +15,13 @@ void createSnapshot(const char *directoryPath) {
     time_t t;
     struct tm *tmp;
     char lastModifiedTime[50];
-    // Open the specified directory
+ 
     dir = opendir(directoryPath);
     if(dir == NULL) {
         perror("Unable to open directory");
         exit(EXIT_FAILURE);
     }
 
-    // Open the Snapshot.txt file
     snprintf(filePath, sizeof(filePath), "%s/Snapshot.txt", directoryPath);
     FILE *snapshotFile = fopen(filePath, "w"); // Change open to fopen and use "w" to write to the file.
 
@@ -30,15 +29,13 @@ void createSnapshot(const char *directoryPath) {
         perror("Unable to create snapshot file");
         exit(EXIT_FAILURE);
     }
-    // Iterate over each entry in the directory
+
     while((entry = readdir(dir)) != NULL) {
         snprintf(filePath, sizeof(filePath), "%s/%s", directoryPath, entry->d_name);
-        // Get file stats
         if(stat(filePath, &fileInfo) == 0) {
             t = fileInfo.st_mtime;
             tmp = localtime(&t);
             strftime(lastModifiedTime, sizeof(lastModifiedTime), "%Y-%m-%d %H:%M:%S", tmp);
-            // Write metadata to Snapshot.txt
             if(S_ISDIR(fileInfo.st_mode)) {
                 write(snapshotFile, "Directory: %s, Last Modified: %s\n", entry->d_name, lastModifiedTime);
             } else {
@@ -46,15 +43,9 @@ void createSnapshot(const char *directoryPath) {
             }
         }
     }
-    //Cleanup
     fclose(snapshotFile);
     closedir(dir);
 }
-
-/*
-void compare_snapshot {
-}
-*/
 
 int main(int argc, char *argv[]) {
 
