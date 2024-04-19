@@ -59,7 +59,6 @@ void compare_snapshot {
 int main(int argc, char *argv[]) {
 
     if(argc > 10) {
-        fprintf(stderr, "Usage: %s \n", argv[0]);
         fprintf(stderr, "Usage: %s [directory_path]...\n", argv[0]);
         return EXIT_FAILURE;
     }
