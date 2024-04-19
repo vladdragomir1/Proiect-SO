@@ -4,8 +4,10 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
+#include <sys/types.h>
 #include <time.h>
 #include <fcntl.h>
+#include <unistd.h>
 
 void createSnapshot(const char *directoryPath) {
     DIR *dir;
@@ -37,7 +39,7 @@ void createSnapshot(const char *directoryPath) {
             tmp = localtime(&t);
             strftime(lastModifiedTime, sizeof(lastModifiedTime), "%Y-%m-%d %H:%M:%S", tmp);
             if(S_ISDIR(fileInfo.st_mode)) {
-                write(snapshotFile, "Directory: %s, Last Modified: %s\n", entry->d_name, lastModifiedTime);
+                fprintf(snapshotFile, "Directory: %s, Last Modified: %s\n", entry->d_name, lastModifiedTime);
             } else {
                 fprintf(snapshotFile, "File: %s, Size: %ld, Last Modified: %s\n", entry->d_name, fileInfo.st_size, lastModifiedTime);
             }
@@ -62,7 +64,6 @@ int main(int argc, char *argv[]) {
             perror("fork failed");
             exit(EXIT_FAILURE);
         } else if(pid == 0) {
-            // This is the child process
             createSnapshot(argv[i]);
             _exit(EXIT_SUCCESS); // Use _exit in child to prevent flushing of stdio buffers from parent
         }
