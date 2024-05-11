@@ -174,7 +174,7 @@ int main(int argc, char *argv[]) {
     const char *output_dir = argv[1];
     isolation_dir = argv[2];
 
-    // Verifică și creează directorul de izolare dacă nu există
+    // Verifica și creeaza directorul de izolare daca nu exista
     struct stat st = {0};
     if (stat(isolation_dir, &st) == -1) {
         if (mkdir(isolation_dir, 0777) == -1) {
@@ -211,8 +211,8 @@ int main(int argc, char *argv[]) {
     return EXIT_SUCCESS;
 }
 
-
-
+//SCRIPT>SH
+/*
 #!/bin/bash
 
 if [ $# -ne 1 ]; then
@@ -223,7 +223,6 @@ fi
 KEYWORDS=("corrupt" "dangerous" "risk" "attack" "malware" "malicious")
 FILE=$1
 
-# Check for suspicious content
 for kw in "${KEYWORDS[@]}"; do
     if grep -qi "$kw" "$FILE"; then
         echo "malicious"
@@ -231,17 +230,15 @@ for kw in "${KEYWORDS[@]}"; do
     fi
 done
 
-# Check file statistics: lines, words, characters
 num_lines=$(wc -l < "$FILE")
 num_words=$(wc -w < "$FILE")
 num_chars=$(wc -m < "$FILE")
 
-# Add your specified criteria for "suspicious"
 if [ "$num_lines" -lt 3 ] && [ "$num_words" -gt 1000 ] && [ "$num_chars" -gt 2000 ]; then
-    echo "suspicious"
+    echo "malicious"
     exit 0
 fi
 
-# Default to clean
 echo "clean"
 exit 0
+*/
