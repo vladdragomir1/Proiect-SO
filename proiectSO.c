@@ -166,20 +166,32 @@ void isolateFile(const char *filePath, const char *isolationPath) {
 }
 
 int main(int argc, char *argv[]) {
-    if (argc < 2) {
-        fprintf(stderr, "Usage: %s [directory_path]\n", argv[0]);
+    if (argc < 3) {
+        fprintf(stderr, "Usage: %s [output_directory] [isolation_directory] <directory_to_process...>\n", argv[0]);
         return EXIT_FAILURE;
+    }
+
+    const char *output_dir = argv[1];
+    isolation_dir = argv[2];
+
+    // Verifică și creează directorul de izolare dacă nu există
+    struct stat st = {0};
+    if (stat(isolation_dir, &st) == -1) {
+        if (mkdir(isolation_dir, 0777) == -1) {
+            perror("Failed to create isolation directory");
+            return EXIT_FAILURE;
+        }
     }
 
     pid_t pid[10];  // vector ce tine id uri child process
     int status, processCount = 0;
 
-    for (int i = 1; i < argc; i++) {
-        pid[i - 1] = fork();  // creare proces nou
-        if (pid[i - 1] == -1) {
+    for (int i = 3; i < argc; i++) {
+        pid[i - 3] = fork();  // creare proces nou
+        if (pid[i - 3] == -1) {
             perror("Fork failed");
             return EXIT_FAILURE;
-        } else if (pid[i - 1] == 0) {  // child proccess
+        } else if (pid[i - 3] == 0) {  // child process
             printf("Processing directory: %s\n", argv[i]);
             createSnapshot(argv[i]);
             exit(EXIT_SUCCESS);
@@ -201,8 +213,6 @@ int main(int argc, char *argv[]) {
 
 
 
-//script.sh
-/*
 #!/bin/bash
 
 if [ $# -ne 1 ]; then
@@ -213,13 +223,25 @@ fi
 KEYWORDS=("corrupt" "dangerous" "risk" "attack" "malware" "malicious")
 FILE=$1
 
+# Check for suspicious content
 for kw in "${KEYWORDS[@]}"; do
-    if grep -qi $kw "$FILE"; then
+    if grep -qi "$kw" "$FILE"; then
         echo "malicious"
         exit 0
     fi
 done
 
+# Check file statistics: lines, words, characters
+num_lines=$(wc -l < "$FILE")
+num_words=$(wc -w < "$FILE")
+num_chars=$(wc -m < "$FILE")
+
+# Add your specified criteria for "suspicious"
+if [ "$num_lines" -lt 3 ] && [ "$num_words" -gt 1000 ] && [ "$num_chars" -gt 2000 ]; then
+    echo "suspicious"
+    exit 0
+fi
+
+# Default to clean
 echo "clean"
 exit 0
-*/
