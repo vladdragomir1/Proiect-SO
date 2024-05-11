@@ -224,20 +224,11 @@ KEYWORDS=("corrupt" "dangerous" "risk" "attack" "malware" "malicious")
 FILE=$1
 
 for kw in "${KEYWORDS[@]}"; do
-    if grep -qi "$kw" "$FILE"; then
+    if grep -qi $kw "$FILE"; then
         echo "malicious"
         exit 0
     fi
 done
-
-num_lines=$(wc -l < "$FILE")
-num_words=$(wc -w < "$FILE")
-num_chars=$(wc -m < "$FILE")
-
-if [ "$num_lines" -lt 3 ] && [ "$num_words" -gt 1000 ] && [ "$num_chars" -gt 2000 ]; then
-    echo "malicious"
-    exit 0
-fi
 
 echo "clean"
 exit 0
