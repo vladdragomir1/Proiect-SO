@@ -123,8 +123,8 @@ void analyzeFile(char *filePath) {
         return;
     } else if (pid == 0) {
         // Child process
-        close(pipefd[0]); // Close the read end of the pipe in the child
-        // Redirect stdout to the pipe write end
+        close(pipefd[0]);
+        // Redirectioneaza stdout
         dup2(pipefd[1], STDOUT_FILENO);
         close(pipefd[1]);
 
