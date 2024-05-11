@@ -13,7 +13,7 @@
 // variabile globale
 const char *keywords[] = {"corrupt", "dangerous", "risk", "attack", "malware", "malicious"};
 const int num_keywords = 6;
-const char *isolation_dir = "/path/to/isolation_dir"; // Set the path for the isolation directory
+const char *isolation_dir = "/path/to/isolation_dir";
 
 const char *suspicious_keywords[] = {"corrupted", "dangerous", "risk", "attack", "malware", "malicious"};
 const int minimum_line_count = 3;
@@ -74,7 +74,7 @@ void createSnapshot(const char *directoryPath) {
     closedir(dir);
 }
 
-//functie scanare continut malicios
+//functie scanare continut malitios
 int scanForMaliciousContent(const char *content) {
     for (int i = 0; i < num_keywords; i++) {
         if (strstr(content, suspicious_keywords[i]) != NULL) {
@@ -91,8 +91,9 @@ void analyzeFile(char *filePath) {
         return;
     }
 
-    char buffer[1024];
     ssize_t bytes_read;
+    /*
+    char buffer[1024];
     int suspicious = 0;
 
     while ((bytes_read = read(fd, buffer, sizeof(buffer) - 1)) > 0) {
@@ -104,14 +105,56 @@ void analyzeFile(char *filePath) {
     }
 
     close(fd);
+    */
+    int pipefd[2], suspicious = 0;
 
-    if (suspicious) {
-        isolateFile(filePath, isolation_dir);
+    if (pipe(pipefd) == -1) {
+        perror("Pipe failed");
+        close(fd);
+        return;
+    }
+
+    pid_t pid = fork();
+    if (pid == -1) {
+        perror("Fork failed");
+        close(pipefd[0]);
+        close(pipefd[1]);
+        close(fd);
+        return;
+    } else if (pid == 0) {
+        // Child process
+        close(pipefd[0]); // Close the read end of the pipe in the child
+        // Redirect stdout to the pipe write end
+        dup2(pipefd[1], STDOUT_FILENO);
+        close(pipefd[1]);
+
+        // Executa un shell script ce scaneaza file ul pt continut malitios
+        execl("script.sh", "script.sh", filePath, NULL);
+        perror("execl failed");
+        exit(EXIT_FAILURE);
     } else {
-        printf("File %s is considered safe.\n", filePath);
+        close(pipefd[1]); 
+        close(fd);
+
+        char scriptOutput[256];
+        while ((bytes_read = read(pipefd[0], scriptOutput, sizeof(scriptOutput) - 1)) > 0) {
+            scriptOutput[bytes_read] = '\0';
+            if (strstr(scriptOutput, "malicious")) {
+                suspicious = 1;
+            }
+        }
+        close(pipefd[0]);
+        wait(NULL); 
+
+        if (suspicious) {
+            isolateFile(filePath, isolation_dir);
+        } else {
+            printf("File %s is considered safe.\n", filePath);
+        }
     }
 }
 
+// functie de izolare file
 void isolateFile(const char *filePath, const char *isolationPath) {
     char newLocation[1024];
     snprintf(newLocation, sizeof(newLocation), "%s/%s", isolationPath, strrchr(filePath, '/') + 1);
@@ -155,3 +198,28 @@ int main(int argc, char *argv[]) {
 
     return EXIT_SUCCESS;
 }
+
+
+
+//script.sh
+/*
+#!/bin/bash
+
+if [ $# -ne 1 ]; then
+    echo "Usage: $0 <file_path>"
+    exit 1
+fi
+
+KEYWORDS=("corrupt" "dangerous" "risk" "attack" "malware" "malicious")
+FILE=$1
+
+for kw in "${KEYWORDS[@]}"; do
+    if grep -qi $kw "$FILE"; then
+        echo "malicious"
+        exit 0
+    fi
+done
+
+echo "clean"
+exit 0
+*/
